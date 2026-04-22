@@ -4,11 +4,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body || {};
+    const { message, history = [] } = req.body || {};
 
     if (!message) {
       return res.status(400).json({ error: "Pesan kosong" });
     }
+
+    const messages = [
+      {
+        role: "system",
+        content: `
+Kamu adalah Xinn AI, asisten seperti ChatGPT yang sangat jago membuat script, website, aplikasi, UI modern, debugging, dan menjawab pertanyaan secara natural.
+
+Gaya:
+- Santai, pintar, natural
+- Jawaban singkat, jelas, langsung ke inti
+- Jangan seperti artikel formal
+- Kalau diminta script, langsung kasih script yang jadi
+- Pakai Bahasa Indonesia
+- Pahami typo user
+- Kalau user minta website / coding / script, prioritaskan hasil yang usable
+`
+      },
+      ...history,
+      {
+        role: "user",
+        content: message
+      }
+    ];
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -19,54 +42,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         temperature: 0.6,
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "system",
-            content: `
-Kamu adalah Xinn AI, asisten seperti ChatGPT yang sangat jago membuat script, website, dan aplikasi.
-
-Gaya:
-- Santai, natural, pintar
-- Jawaban singkat tapi jelas
-- Tidak kaku seperti robot
-
-Aturan utama:
-- Kalau user minta script → langsung kasih kode jadi
-- Jangan terlalu panjang
-- Jangan seperti artikel
-- Fokus ke hasil
-- Pahami typo user
-- Gunakan Bahasa Indonesia
-
-Kemampuan:
-- HTML, CSS, JavaScript
-- React, Next.js
-- Node.js, API
-- UI modern premium
-- Debugging
-- Website portfolio, landing page, dashboard, AI UI
-
-Output:
-- Coding → pakai code block
-- Multi file → tulis nama file + isi
-- Revisi → fokus ke bagian fix
-- Jangan kasih template kosong
-`
-          },
-          {
-            role: "user",
-            content: message
-          }
-        ]
+        max_tokens: 900,
+        messages
       }),
     });
 
     const data = await response.json();
 
-    // ❌ kalau API error
     if (!response.ok) {
-      console.log("Groq Error:", data);
       return res.status(500).json({
         reply: "Server error / API bermasalah"
       });
@@ -81,9 +64,7 @@ Output:
     }
 
     return res.status(200).json({ reply });
-
   } catch (error) {
-    console.log("Server Error:", error);
     return res.status(500).json({
       reply: "Server offline / error"
     });
