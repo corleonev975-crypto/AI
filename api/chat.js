@@ -4,55 +4,63 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
+    const { message } = req.body || {};
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    if (!message) {
+      return res.status(400).json({ error: "Pesan kosong" });
+    }
+
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ error: "GROQ_API_KEY belum ada di Vercel" });
+    }
+
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama3-70b-8192",
+        model: "llama-3.1-8b-instant",
         messages: [
           {
             role: "system",
-            content: "Kamu adalah Xinn AI, jawab santai, natural, seperti ChatGPT."
+            content:
+              "Kamu adalah Xinn AI, asisten cerdas, santai, natural, dan membantu seperti ChatGPT. Jawab dengan bahasa Indonesia yang jelas dan tidak kaku."
           },
           {
             role: "user",
             content: message
           }
-        ]
-      })
+        ],
+        temperature: 0.7,
+        max_tokens: 700
+      }),
     });
 
-    const data = await response.json();
+    const data = await groqRes.json();
 
-    // 🔥 DEBUG LOG
-    console.log("GROQ RESPONSE:", data);
-
-    // ❌ kalau API error
-    if (!response.ok) {
-      return res.status(500).json({
-        reply: "API error: " + (data.error?.message || "unknown")
+    if (!groqRes.ok) {
+      return res.status(groqRes.status).json({
+        error: data?.error?.message || "Groq API error",
+        debug: data
       });
     }
 
-    // ❌ kalau kosong
-    if (!data.choices || !data.choices[0]) {
+    const reply = data?.choices?.[0]?.message?.content;
+
+    if (!reply) {
       return res.status(500).json({
-        reply: "AI tidak memberi respon"
+        error: "AI tidak memberi balasan",
+        debug: data
       });
     }
 
-    return res.status(200).json({
-      reply: data.choices[0].message.content
-    });
-
+    return res.status(200).json({ reply });
   } catch (err) {
     return res.status(500).json({
-      reply: "Server error: " + err.message
+      error: "Server error",
+      detail: err.message
     });
   }
 }
