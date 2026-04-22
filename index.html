@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Xinn AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,104 +10,81 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="bg-stars"></div>
-  <div class="bg-glow bg-glow-1"></div>
-  <div class="bg-glow bg-glow-2"></div>
+  <div class="stars"></div>
 
-  <main class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-core"></div>
+        </div>
+        <div class="sidebar-brand-text">
+          <span class="brand-xinn">Xinn</span>
+          <span class="brand-ai">AI</span>
+        </div>
+      </div>
+
+      <button class="close-sidebar" id="closeSidebar" aria-label="Tutup">×</button>
+    </div>
+
+    <div class="sidebar-body">
+      <p>Silakan login untuk melihat<br />riwayat percakapan.</p>
+    </div>
+
+    <div class="sidebar-footer">
+      <span>Xinn AI System</span>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="app" id="app">
     <header class="topbar">
-      <button class="menu-btn" aria-label="Menu">
+      <button class="menu-btn" id="openSidebar" aria-label="Menu">
         <span></span>
         <span></span>
         <span></span>
       </button>
-
-      <div class="brand-top">XINN AI</div>
-
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span>ONLINE</span>
-      </div>
     </header>
 
     <section class="hero">
-      <div class="orb-wrap">
-        <div class="hud-line hud-line-left"></div>
-        <div class="hud-line hud-line-right"></div>
-
-        <div class="orb-ring ring-1"></div>
-        <div class="orb-ring ring-2"></div>
-        <div class="orb-ring ring-3"></div>
+      <div class="orb-area">
+        <div class="orb-ring ring-a"></div>
+        <div class="orb-ring ring-b"></div>
+        <div class="orb-ellipse ellipse-a"></div>
+        <div class="orb-ellipse ellipse-b"></div>
 
         <div class="orb-core">
-          <div class="orb-glow"></div>
-          <div class="orb-swirl swirl-1"></div>
-          <div class="orb-swirl swirl-2"></div>
-          <div class="orb-swirl swirl-3"></div>
-
-          <div class="logo-x" aria-hidden="true">
-            <span></span>
-            <span></span>
-          </div>
-
-          <span class="orb-particle p1"></span>
-          <span class="orb-particle p2"></span>
-          <span class="orb-particle p3"></span>
+          <div class="orb-inner-glow"></div>
+          <div class="orb-detail"></div>
+          <div class="orb-center"></div>
         </div>
       </div>
 
-      <h1 class="hero-title">
-        <span class="title-main">Xinn</span>
-        <span class="title-accent">AI</span>
-      </h1>
+      <h1 class="hero-title">Xinn AI Is Online</h1>
+      <p class="hero-subtitle">AI Assistant Siap Membantu</p>
+    </section>
 
-      <div class="title-divider">
-        <span></span>
-        <i></i>
-        <span></span>
+    <section class="chat-wrap">
+      <div class="chat-box">
+        <input id="chatInput" type="text" placeholder="Tanyakan apa saja..." />
+
+        <div class="chat-left">
+          <button class="icon-btn">📎</button>
+          <button class="tools-btn">⚙ Tools</button>
+        </div>
+
+        <div class="chat-right">
+          <button class="icon-btn mic">🎤</button>
+          <button class="send-btn" id="sendBtn">➤</button>
+        </div>
       </div>
 
-      <p class="hero-subtitle">
-        AI Assistant yang selalu siap membantu kapan saja, di mana saja.
-      </p>
-    </section>
-
-    <section class="chat-log" id="chatLog" aria-live="polite"></section>
-
-    <section class="wave-wrap">
-      <span class="wave wave-1"></span>
-      <span class="wave wave-2"></span>
-      <span class="wave wave-3"></span>
-    </section>
-
-    <section class="composer-section">
-      <form class="composer-box" id="chatForm">
-        <input id="chatInput" type="text" placeholder="Ketik pesan kamu di sini..." autocomplete="off" />
-
-        <div class="composer-left">
-          <button class="icon-btn" type="button" aria-label="Attachment">📎</button>
-          <button class="tools-btn" type="button">◫ Tools</button>
-        </div>
-
-        <div class="composer-right">
-          <button class="icon-btn mic-btn" type="button" aria-label="Mic">🎤</button>
-          <button class="send-btn" id="sendBtn" type="submit" aria-label="Send">➤</button>
-        </div>
-      </form>
-
-      <p class="footer-note">
+      <p class="chat-note">
         Xinn AI dapat membuat kesalahan. Periksa info penting.
-        <span class="info-dot">i</span>
       </p>
     </section>
   </main>
-
-  <template id="messageTemplate">
-    <article class="message">
-      <div class="message-role"></div>
-      <div class="message-content"></div>
-    </article>
-  </template>
 
   <script src="script.js"></script>
 </body>
