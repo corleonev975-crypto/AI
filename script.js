@@ -18,6 +18,12 @@ const input = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const newChatBtn = document.getElementById("newChatBtn");
 
+const fileInput = document.getElementById("fileInput");
+const cameraInput = document.getElementById("cameraInput");
+const uploadFileBtn = document.getElementById("uploadFileBtn");
+const cameraBtn = document.getElementById("cameraBtn");
+const galleryBtn = document.getElementById("galleryBtn");
+
 openSidebar.addEventListener("click", () => {
   sidebar.classList.add("open");
   overlay.classList.add("show");
@@ -48,6 +54,24 @@ document.addEventListener("click", () => {
   statusDropdown.classList.remove("show");
 });
 
+uploadFileBtn.addEventListener("click", () => {
+  plusPopup.classList.remove("show");
+  fileInput.click();
+});
+
+galleryBtn.addEventListener("click", () => {
+  plusPopup.classList.remove("show");
+  fileInput.click();
+});
+
+cameraBtn.addEventListener("click", () => {
+  plusPopup.classList.remove("show");
+  cameraInput.click();
+});
+
+fileInput.addEventListener("change", handleSelectedFile);
+cameraInput.addEventListener("change", handleSelectedFile);
+
 sendBtn.addEventListener("click", sendMessage);
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -68,10 +92,6 @@ async function sendMessage() {
   if (!message) return;
 
   activateChatMode();
-
-  if (chatBox.children.length === 0) {
-    addMessage("Halo! Ada yang bisa saya bantu?", "ai");
-  }
 
   addMessage(message, "user");
   input.value = "";
@@ -181,6 +201,34 @@ function fixText(text) {
     .replace(/([a-zà-ÿ])([A-ZÀ-Ÿ])/g, "$1 $2")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function handleSelectedFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  activateChatMode();
+  addMessage(`Mengirim file: ${file.name}`, "user");
+
+  if (file.type.startsWith("image/")) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const wrap = document.createElement("div");
+      wrap.className = "msg user";
+      wrap.style.padding = "10px";
+      wrap.innerHTML = `<img src="${reader.result}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
+      chatBox.appendChild(wrap);
+      scrollToBottom();
+
+      const reply = addMessage("Gambar diterima. Fitur analisis gambar frontend sudah aktif, tapi backend /api/chat kamu saat ini masih mode teks. Kalau mau, backend-nya bisa aku upgrade setelah ini.", "ai");
+      scrollToBottom();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    addMessage("File diterima. Saat ini backend kamu masih mode teks. Upload file sudah aktif di UI.", "ai");
+  }
+
+  event.target.value = "";
 }
 
 checkAPI();
