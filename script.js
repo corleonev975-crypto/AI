@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v4";
+const STORAGE_KEY = "xinn_ai_pro_chats_v5";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -185,14 +185,11 @@ function renderMessageElement(msg) {
     el.innerHTML = `<img class="file-preview" src="${msg.image}" alt="preview">`;
   } else if (msg.role === "ai") {
     const topActions = document.createElement("div");
-    topActions.style.position = "absolute";
-    topActions.style.top = "10px";
-    topActions.style.right = "10px";
-    topActions.style.display = "flex";
-    topActions.style.gap = "8px";
+    topActions.className = "msg-top-actions";
 
     const copyAllBtn = document.createElement("button");
     copyAllBtn.className = "copy-btn";
+    copyAllBtn.dataset.label = "Salin Semua";
     copyAllBtn.textContent = "Salin Semua";
     copyAllBtn.addEventListener("click", () => copyText(msg.text, copyAllBtn));
 
@@ -444,23 +441,16 @@ function enhanceMessageActions(scope = document) {
     const lang = pre.dataset.lang || detectLanguageFromCode(code?.textContent || "");
 
     const top = document.createElement("div");
-    top.style.display = "flex";
-    top.style.justifyContent = "space-between";
-    top.style.alignItems = "center";
-    top.style.gap = "8px";
-    top.style.marginBottom = "10px";
+    top.className = "code-block-top";
 
     const label = document.createElement("div");
+    label.className = "code-lang";
     label.textContent = lang || "code";
-    label.style.color = "rgba(255,255,255,.45)";
-    label.style.fontSize = "12px";
-    label.style.textTransform = "lowercase";
 
     const copyCodeBtn = document.createElement("button");
-    copyCodeBtn.className = "copy-btn";
+    copyCodeBtn.className = "copy-btn code-copy-btn";
     copyCodeBtn.dataset.label = "Salin Kode";
     copyCodeBtn.textContent = "Salin Kode";
-    copyCodeBtn.style.position = "static";
     copyCodeBtn.addEventListener("click", () => {
       copyText(code?.textContent || "", copyCodeBtn);
     });
@@ -476,7 +466,7 @@ function detectLanguageFromCode(code) {
   const value = String(code).trim();
 
   if (/^<!DOCTYPE html>|<html|<head|<body|<div|<section/i.test(value)) return "html";
-  if (/:root|background:|display: flex|@media|border-radius|color:/i.test(value)) return "css";
+  if (/:root|background:|display:\s*flex|@media|border-radius|color:/i.test(value)) return "css";
   if (/const |let |function |=>|document\.|addEventListener|fetch\(/i.test(value)) return "javascript";
   if (/export default|interface |type |: string|: number/i.test(value)) return "typescript";
   if (/SELECT |INSERT INTO |UPDATE |DELETE FROM |CREATE TABLE/i.test(value)) return "sql";
