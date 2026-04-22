@@ -1,50 +1,53 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { message } = req.body || {};
+    const { message } = req.body;
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Pesan tidak valid.' });
+    if (!message) {
+      return res.status(400).json({ error: "Pesan kosong" });
     }
 
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        model: "llama3-70b-8192",
         messages: [
           {
-            role: 'system',
-            content: 'Kamu adalah Xinn AI, asisten cerdas, ramah, singkat, dan membantu dalam Bahasa Indonesia.'
+            role: "system",
+            content:
+              "Kamu adalah Xinn AI, asisten cerdas, ramah, natural, dan membantu seperti ChatGPT. Jawab dengan bahasa Indonesia yang santai, jelas, dan tidak kaku. Jangan terlalu panjang kecuali diminta. Jangan jawab seperti template."
           },
           {
-            role: 'user',
+            role: "user",
             content: message
           }
         ],
         temperature: 0.7,
-        max_tokens: 1024
+        max_tokens: 800
       })
     });
 
-    const payload = await groqResponse.json();
+    const data = await response.json();
 
-    if (!groqResponse.ok) {
-      return res.status(groqResponse.status).json({
-        error: payload?.error?.message || 'Groq API error.'
+    if (!response.ok) {
+      return res.status(500).json({
+        error: data?.error?.message || "Gagal dari Groq"
       });
     }
 
-    const reply = payload?.choices?.[0]?.message?.content || 'Maaf, saya belum bisa membalas sekarang.';
-
-    return res.status(200).json({ reply });
+    return res.status(200).json({
+      reply: data.choices?.[0]?.message?.content || "Tidak ada balasan."
+    });
   } catch (error) {
-    return res.status(500).json({ error: 'Server error.' });
+    return res.status(500).json({
+      error: "Server error"
+    });
   }
 }
