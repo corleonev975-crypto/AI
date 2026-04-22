@@ -6,10 +6,7 @@
   <title>Xinn AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -26,8 +23,7 @@
           <span class="brand-ai">AI</span>
         </div>
       </div>
-
-      <button class="sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>
+      <button class="sidebar-close" id="closeSidebar" aria-label="Tutup">×</button>
     </div>
 
     <button class="new-chat-btn" id="newChatBtn">＋ New Chat</button>
@@ -56,7 +52,7 @@
 
   <main class="app" id="app">
     <header class="topbar">
-      <button class="menu-btn" id="openSidebar" aria-label="Buka sidebar">
+      <button class="menu-btn" id="openSidebar" aria-label="Menu">
         <span></span>
         <span></span>
         <span></span>
@@ -64,26 +60,28 @@
 
       <div class="top-title">XINN AI</div>
 
-      <button class="server-status" id="serverStatusBtn" type="button">
-        <span id="statusDot">🟢</span>
-        <span id="statusText">Online</span>
-        <span class="caret">▾</span>
-      </button>
+      <div class="status-wrap">
+        <button class="server-status" id="serverStatusBtn" type="button">
+          <span id="statusDot">🟢</span>
+          <span id="statusText">Online</span>
+          <span class="caret">▾</span>
+        </button>
 
-      <div class="status-dropdown" id="statusDropdown">
-        <div class="status-row">
-          <span class="big-dot online-dot">🟢</span>
-          <div>
-            <div class="status-label online-text">Online</div>
-            <div class="status-desc">Server berjalan dengan normal.</div>
+        <div class="status-dropdown" id="statusDropdown">
+          <div class="status-row">
+            <span class="big-dot">🟢</span>
+            <div>
+              <div class="status-label online-text">Online</div>
+              <div class="status-desc">Server berjalan dengan normal.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="status-row">
-          <span class="big-dot offline-dot">🔴</span>
-          <div>
-            <div class="status-label offline-text">Offline</div>
-            <div class="status-desc">Server tidak tersedia atau API key tidak ditemukan.</div>
+          <div class="status-row">
+            <span class="big-dot">🔴</span>
+            <div>
+              <div class="status-label offline-text">Offline</div>
+              <div class="status-desc">Server tidak tersedia atau API key tidak ditemukan.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -102,7 +100,7 @@
         </div>
       </div>
 
-      <h1 class="hero-title">Xinn AI Online</h1>
+      <h1 class="hero-title"><span class="white">Xinn</span> <span class="grad">AI</span> Online</h1>
       <p class="hero-subtitle">
         Aku adalah Xinn AI cerdas, pintar,<br />
         dan bisa membantu anda.
@@ -115,7 +113,7 @@
 
     <section class="input-wrap">
       <div class="plus-menu-wrap">
-        <button class="plus-btn" id="plusBtn">＋</button>
+        <button class="plus-btn" id="plusBtn" type="button">＋</button>
 
         <div class="plus-popup" id="plusPopup">
           <button class="plus-item">📎 Tambah file</button>
@@ -129,9 +127,9 @@
         <input id="chatInput" type="text" placeholder="Ketik pesan kamu di sini..." />
 
         <div class="input-actions-right">
-          <button class="small-btn globe-btn">◎</button>
-          <button class="small-btn mic-btn">🎤</button>
-          <button class="send-btn" id="sendBtn">↑</button>
+          <button class="small-btn">◎</button>
+          <button class="small-btn">🎤</button>
+          <button class="send-btn" id="sendBtn" type="button">↑</button>
         </div>
       </div>
 
@@ -144,4 +142,4 @@
 
   <script src="script.js"></script>
 </body>
-  </html>
+            </html>
