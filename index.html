@@ -2,11 +2,15 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Xinn AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -23,24 +27,17 @@
           <span class="brand-ai">AI</span>
         </div>
       </div>
+
       <button class="sidebar-close" id="closeSidebar" aria-label="Tutup">×</button>
     </div>
 
     <button class="new-chat-btn" id="newChatBtn">＋ New Chat</button>
 
     <div class="sidebar-search">
-      <input type="text" placeholder="Cari chat" />
+      <input type="text" id="historySearch" placeholder="Cari chat" />
     </div>
 
-    <div class="sidebar-list">
-      <div class="sidebar-group-title">Hari ini</div>
-      <button class="history-item">Siapa kamu?</button>
-      <button class="history-item">Apa itu AI?</button>
-
-      <div class="sidebar-group-title">Kemarin</div>
-      <button class="history-item">Cara belajar AI</button>
-      <button class="history-item">Contoh penggunaan AI</button>
-    </div>
+    <div class="sidebar-history" id="historyList"></div>
 
     <div class="sidebar-bottom">
       <button class="sidebar-bottom-btn">✨ Upgrade to Pro</button>
@@ -123,7 +120,7 @@
           <button class="plus-item" id="uploadFileBtn">📎 Tambah file</button>
           <button class="plus-item" id="cameraBtn">📷 Ambil foto</button>
           <button class="plus-item" id="galleryBtn">🖼️ Pilih foto</button>
-          <button class="plus-item">✨ Buat gambar</button>
+          <button class="plus-item" id="fakeImageBtn">✨ Buat gambar</button>
         </div>
       </div>
 
@@ -149,4 +146,4 @@
 
   <script src="script.js"></script>
 </body>
-</html>
+  </html>
