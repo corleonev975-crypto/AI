@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v2";
+const STORAGE_KEY = "xinn_ai_pro_chats_v3";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -85,6 +85,12 @@ chatInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     sendMessage();
   }
+});
+
+chatInput.addEventListener("focus", () => {
+  setTimeout(() => {
+    scrollBottom();
+  }, 300);
 });
 
 newChatBtn.addEventListener("click", () => {
@@ -174,9 +180,19 @@ function renderMessageElement(msg) {
 
   if (msg.type === "image") {
     el.style.padding = "10px";
+    el.classList.add("without-copy");
     el.innerHTML = `<img class="file-preview" src="${msg.image}" alt="preview">`;
   } else if (msg.role === "ai") {
-    el.innerHTML = renderMarkdown(msg.text);
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "Salin";
+    copyBtn.addEventListener("click", () => copyText(msg.text, copyBtn));
+    el.appendChild(copyBtn);
+
+    const content = document.createElement("div");
+    content.className = "msg-content";
+    content.innerHTML = renderMarkdown(msg.text);
+    el.appendChild(content);
   } else {
     el.innerText = msg.text;
   }
@@ -204,6 +220,7 @@ async function sendMessage() {
     text,
     type: "text"
   };
+
   chat.messages.push(userMsg);
   saveChats();
   renderHistory();
@@ -276,7 +293,7 @@ function activateChatMode() {
 
 function addTyping() {
   const wrap = document.createElement("div");
-  wrap.className = "msg ai";
+  wrap.className = "msg ai without-copy";
   wrap.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
   messages.appendChild(wrap);
   scrollBottom();
@@ -284,14 +301,17 @@ function addTyping() {
 }
 
 function typeMarkdown(el, fullText) {
-  el.innerHTML = "";
+  const content = el.querySelector(".msg-content");
+  if (!content) return;
+
+  content.innerHTML = "";
   let i = 0;
 
   function tick() {
     if (i < fullText.length) {
       i += 2;
       const partial = fullText.slice(0, i);
-      el.innerHTML = renderMarkdown(partial);
+      content.innerHTML = renderMarkdown(partial);
       scrollBottom();
       setTimeout(tick, 8);
     }
@@ -301,7 +321,12 @@ function typeMarkdown(el, fullText) {
 }
 
 function scrollBottom() {
-  chatArea.scrollTop = chatArea.scrollHeight;
+  requestAnimationFrame(() => {
+    chatArea.scrollTo({
+      top: chatArea.scrollHeight,
+      behavior: "smooth"
+    });
+  });
 }
 
 function setOnline(state) {
@@ -346,7 +371,7 @@ function handleSelectedFile(event) {
       chat.messages.push({
         role: "ai",
         type: "text",
-        text: "Gambar diterima. Upload aktif di UI. Kalau mau analisis gambar oleh AI, backend `/api/chat` perlu versi vision."
+        text: "Gambar diterima 📷✨ Upload aktif di UI. Kalau mau analisis gambar oleh AI, backend `/api/chat` perlu versi vision."
       });
 
       saveChats();
@@ -366,7 +391,7 @@ function handleSelectedFile(event) {
     chat.messages.push({
       role: "ai",
       type: "text",
-      text: "File diterima. Upload file sudah aktif di UI."
+      text: "File diterima 📎 Upload file sudah aktif di UI."
     });
 
     saveChats();
@@ -375,6 +400,23 @@ function handleSelectedFile(event) {
   }
 
   event.target.value = "";
+}
+
+async function copyText(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+    button.textContent = "Tersalin";
+    button.classList.add("copied");
+    setTimeout(() => {
+      button.textContent = "Salin";
+      button.classList.remove("copied");
+    }, 1600);
+  } catch {
+    button.textContent = "Gagal";
+    setTimeout(() => {
+      button.textContent = "Salin";
+    }, 1200);
+  }
 }
 
 function renderMarkdown(text) {
