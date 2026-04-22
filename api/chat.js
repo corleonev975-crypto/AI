@@ -26,7 +26,7 @@ export default async function handler(req, res) {
           {
             role: "system",
             content:
-              "Kamu adalah Xinn AI, asisten cerdas, santai, natural, dan membantu seperti ChatGPT. Jawab dengan bahasa Indonesia yang jelas dan tidak kaku."
+              "Kamu adalah Xinn AI. Jawab singkat, cerdas, natural, modern, dan langsung ke inti seperti ChatGPT. Gunakan bahasa Indonesia yang santai dan jelas. Jangan bertele-tele."
           },
           {
             role: "user",
