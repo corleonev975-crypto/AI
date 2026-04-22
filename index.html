@@ -6,7 +6,10 @@
   <title>Xinn AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -24,15 +27,28 @@
         </div>
       </div>
 
-      <button class="close-sidebar" id="closeSidebar" aria-label="Tutup">×</button>
+      <button class="sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>
     </div>
 
-    <div class="sidebar-body">
-      <p>Silakan login untuk melihat<br />riwayat percakapan.</p>
+    <button class="new-chat-btn" id="newChatBtn">＋ New Chat</button>
+
+    <div class="sidebar-search">
+      <input type="text" placeholder="Cari chat" />
     </div>
 
-    <div class="sidebar-footer">
-      <span>Xinn AI System</span>
+    <div class="sidebar-list">
+      <div class="sidebar-group-title">Hari ini</div>
+      <button class="history-item">Siapa kamu?</button>
+      <button class="history-item">Apa itu AI?</button>
+
+      <div class="sidebar-group-title">Kemarin</div>
+      <button class="history-item">Cara belajar AI</button>
+      <button class="history-item">Contoh penggunaan AI</button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn">✨ Upgrade to Pro</button>
+      <button class="sidebar-bottom-btn">👤 Login / Daftar</button>
     </div>
   </aside>
 
@@ -40,52 +56,92 @@
 
   <main class="app" id="app">
     <header class="topbar">
-      <button class="menu-btn" id="openSidebar" aria-label="Menu">
+      <button class="menu-btn" id="openSidebar" aria-label="Buka sidebar">
         <span></span>
         <span></span>
         <span></span>
       </button>
+
+      <div class="top-title">XINN AI</div>
+
+      <button class="server-status" id="serverStatusBtn" type="button">
+        <span id="statusDot">🟢</span>
+        <span id="statusText">Online</span>
+        <span class="caret">▾</span>
+      </button>
+
+      <div class="status-dropdown" id="statusDropdown">
+        <div class="status-row">
+          <span class="big-dot online-dot">🟢</span>
+          <div>
+            <div class="status-label online-text">Online</div>
+            <div class="status-desc">Server berjalan dengan normal.</div>
+          </div>
+        </div>
+
+        <div class="status-row">
+          <span class="big-dot offline-dot">🔴</span>
+          <div>
+            <div class="status-label offline-text">Offline</div>
+            <div class="status-desc">Server tidak tersedia atau API key tidak ditemukan.</div>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <section class="hero">
-      <div class="orb-area">
-        <div class="orb-ring ring-a"></div>
-        <div class="orb-ring ring-b"></div>
-        <div class="orb-ellipse ellipse-a"></div>
-        <div class="orb-ellipse ellipse-b"></div>
+    <section class="hero" id="hero">
+      <div class="orb-wrap">
+        <div class="orb-ring ring-1"></div>
+        <div class="orb-ring ring-2"></div>
+        <div class="orb-ring ring-3"></div>
 
         <div class="orb-core">
-          <div class="orb-inner-glow"></div>
+          <div class="orb-glow"></div>
           <div class="orb-detail"></div>
-          <div class="orb-center"></div>
+          <div class="orb-hole"></div>
         </div>
       </div>
 
-      <h1 class="hero-title">Xinn AI Is Online</h1>
-      <p class="hero-subtitle">AI Assistant Siap Membantu</p>
+      <h1 class="hero-title">Xinn AI Online</h1>
+      <p class="hero-subtitle">
+        Aku adalah Xinn AI cerdas, pintar,<br />
+        dan bisa membantu anda.
+      </p>
     </section>
 
-    <section class="chat-wrap">
-      <div class="chat-box">
-        <input id="chatInput" type="text" placeholder="Tanyakan apa saja..." />
+    <section class="chat-container" id="chatContainer">
+      <div id="chatBox"></div>
+    </section>
 
-        <div class="chat-left">
-          <button class="icon-btn">📎</button>
-          <button class="tools-btn">⚙ Tools</button>
-        </div>
+    <section class="input-wrap">
+      <div class="plus-menu-wrap">
+        <button class="plus-btn" id="plusBtn">＋</button>
 
-        <div class="chat-right">
-          <button class="icon-btn mic">🎤</button>
-          <button class="send-btn" id="sendBtn">➤</button>
+        <div class="plus-popup" id="plusPopup">
+          <button class="plus-item">📎 Tambah file</button>
+          <button class="plus-item">📷 Ambil foto</button>
+          <button class="plus-item">🖼️ Pilih foto</button>
+          <button class="plus-item">✨ Buat gambar</button>
         </div>
       </div>
 
-      <p class="chat-note">
+      <div class="input-box">
+        <input id="chatInput" type="text" placeholder="Ketik pesan kamu di sini..." />
+
+        <div class="input-actions-right">
+          <button class="small-btn globe-btn">◎</button>
+          <button class="small-btn mic-btn">🎤</button>
+          <button class="send-btn" id="sendBtn">↑</button>
+        </div>
+      </div>
+
+      <p class="footer-note">
         Xinn AI dapat membuat kesalahan. Periksa info penting.
+        <span class="info-dot">?</span>
       </p>
     </section>
   </main>
 
   <script src="script.js"></script>
 </body>
-</html>
+  </html>
