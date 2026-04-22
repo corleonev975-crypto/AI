@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const { message } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: "Pesan kosong" });
+      return res.status(400).json({ error: "No message" });
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -21,33 +21,26 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content:
-              "Kamu adalah Xinn AI, asisten cerdas, ramah, natural, dan membantu seperti ChatGPT. Jawab dengan bahasa Indonesia yang santai, jelas, dan tidak kaku. Jangan terlalu panjang kecuali diminta. Jangan jawab seperti template."
+            content: "Kamu adalah Xinn AI, jawab santai, natural, seperti ChatGPT."
           },
           {
             role: "user",
             content: message
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 800
+        ]
       })
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(500).json({
-        error: data?.error?.message || "Gagal dari Groq"
-      });
-    }
-
     return res.status(200).json({
-      reply: data.choices?.[0]?.message?.content || "Tidak ada balasan."
+      reply: data.choices?.[0]?.message?.content || "No response"
     });
-  } catch (error) {
+
+  } catch (err) {
     return res.status(500).json({
-      error: "Server error"
+      error: "Server error",
+      detail: err.message
     });
   }
 }
