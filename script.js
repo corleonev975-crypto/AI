@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v3";
+const STORAGE_KEY = "xinn_ai_pro_chats_v4";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -171,6 +171,7 @@ function renderCurrentChat() {
   chatArea.classList.add("active");
 
   chat.messages.forEach(renderMessageElement);
+  enhanceMessageActions();
   scrollBottom();
 }
 
@@ -183,14 +184,24 @@ function renderMessageElement(msg) {
     el.classList.add("without-copy");
     el.innerHTML = `<img class="file-preview" src="${msg.image}" alt="preview">`;
   } else if (msg.role === "ai") {
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Salin";
-    copyBtn.addEventListener("click", () => copyText(msg.text, copyBtn));
-    el.appendChild(copyBtn);
+    const topActions = document.createElement("div");
+    topActions.style.position = "absolute";
+    topActions.style.top = "10px";
+    topActions.style.right = "10px";
+    topActions.style.display = "flex";
+    topActions.style.gap = "8px";
+
+    const copyAllBtn = document.createElement("button");
+    copyAllBtn.className = "copy-btn";
+    copyAllBtn.textContent = "Salin Semua";
+    copyAllBtn.addEventListener("click", () => copyText(msg.text, copyAllBtn));
+
+    topActions.appendChild(copyAllBtn);
+    el.appendChild(topActions);
 
     const content = document.createElement("div");
     content.className = "msg-content";
+    content.dataset.raw = msg.text;
     content.innerHTML = renderMarkdown(msg.text);
     el.appendChild(content);
   } else {
@@ -312,8 +323,11 @@ function typeMarkdown(el, fullText) {
       i += 2;
       const partial = fullText.slice(0, i);
       content.innerHTML = renderMarkdown(partial);
+      enhanceMessageActions(el);
       scrollBottom();
       setTimeout(tick, 8);
+    } else {
+      enhanceMessageActions(el);
     }
   }
 
@@ -408,35 +422,89 @@ async function copyText(text, button) {
     button.textContent = "Tersalin";
     button.classList.add("copied");
     setTimeout(() => {
-      button.textContent = "Salin";
+      button.textContent = button.dataset.label || "Salin";
       button.classList.remove("copied");
     }, 1600);
   } catch {
     button.textContent = "Gagal";
     setTimeout(() => {
-      button.textContent = "Salin";
+      button.textContent = button.dataset.label || "Salin";
     }, 1200);
   }
+}
+
+function enhanceMessageActions(scope = document) {
+  const target = scope instanceof Element ? scope : document;
+
+  target.querySelectorAll("pre").forEach((pre) => {
+    if (pre.dataset.enhanced === "true") return;
+    pre.dataset.enhanced = "true";
+
+    const code = pre.querySelector("code");
+    const lang = pre.dataset.lang || detectLanguageFromCode(code?.textContent || "");
+
+    const top = document.createElement("div");
+    top.style.display = "flex";
+    top.style.justifyContent = "space-between";
+    top.style.alignItems = "center";
+    top.style.gap = "8px";
+    top.style.marginBottom = "10px";
+
+    const label = document.createElement("div");
+    label.textContent = lang || "code";
+    label.style.color = "rgba(255,255,255,.45)";
+    label.style.fontSize = "12px";
+    label.style.textTransform = "lowercase";
+
+    const copyCodeBtn = document.createElement("button");
+    copyCodeBtn.className = "copy-btn";
+    copyCodeBtn.dataset.label = "Salin Kode";
+    copyCodeBtn.textContent = "Salin Kode";
+    copyCodeBtn.style.position = "static";
+    copyCodeBtn.addEventListener("click", () => {
+      copyText(code?.textContent || "", copyCodeBtn);
+    });
+
+    top.appendChild(label);
+    top.appendChild(copyCodeBtn);
+
+    pre.prepend(top);
+  });
+}
+
+function detectLanguageFromCode(code) {
+  const value = String(code).trim();
+
+  if (/^<!DOCTYPE html>|<html|<head|<body|<div|<section/i.test(value)) return "html";
+  if (/:root|background:|display: flex|@media|border-radius|color:/i.test(value)) return "css";
+  if (/const |let |function |=>|document\.|addEventListener|fetch\(/i.test(value)) return "javascript";
+  if (/export default|interface |type |: string|: number/i.test(value)) return "typescript";
+  if (/SELECT |INSERT INTO |UPDATE |DELETE FROM |CREATE TABLE/i.test(value)) return "sql";
+  if (/from flask|def |print\(|import os|if __name__/i.test(value)) return "python";
+
+  return "code";
 }
 
 function renderMarkdown(text) {
   const escaped = escapeHtml(text);
 
-  const withCodeBlocks = escaped.replace(/```([\s\S]*?)```/g, (_, code) => {
-    return `<pre><code>${code.trim()}</code></pre>`;
+  const withCodeBlocks = escaped.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const safeLang = lang ? lang.toLowerCase() : detectLanguageFromCode(code);
+    return `<pre data-lang="${safeLang}"><code>${code.trim()}</code></pre>`;
   });
 
-  const withInline = withCodeBlocks.replace(/`([^`]+)`/g, "<code>$1</code>");
+  const withInline = withCodeBlocks.replace(
+    /`([^`]+)`/g,
+    "<code style='display:inline;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:6px;'>$1</code>"
+  );
 
-  const paragraphs = withInline
+  return withInline
     .split(/\n{2,}/)
     .map((p) => {
-      if (p.startsWith("<pre>")) return p;
+      if (p.startsWith("<pre")) return p;
       return `<p>${p.replace(/\n/g, "<br>")}</p>`;
     })
     .join("");
-
-  return paragraphs;
 }
 
 function escapeHtml(str) {
