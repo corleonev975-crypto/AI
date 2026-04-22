@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v5";
+const STORAGE_KEY = "xinn_ai_pro_chats_v6";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -184,17 +184,23 @@ function renderMessageElement(msg) {
     el.classList.add("without-copy");
     el.innerHTML = `<img class="file-preview" src="${msg.image}" alt="preview">`;
   } else if (msg.role === "ai") {
-    const topActions = document.createElement("div");
-    topActions.className = "msg-top-actions";
+    const shouldShowCopyAll = shouldRenderCopyAll(msg.text);
 
-    const copyAllBtn = document.createElement("button");
-    copyAllBtn.className = "copy-btn";
-    copyAllBtn.dataset.label = "Salin Semua";
-    copyAllBtn.textContent = "Salin Semua";
-    copyAllBtn.addEventListener("click", () => copyText(msg.text, copyAllBtn));
+    if (shouldShowCopyAll) {
+      const topActions = document.createElement("div");
+      topActions.className = "msg-top-actions";
 
-    topActions.appendChild(copyAllBtn);
-    el.appendChild(topActions);
+      const copyAllBtn = document.createElement("button");
+      copyAllBtn.className = "copy-btn";
+      copyAllBtn.dataset.label = "Salin Semua";
+      copyAllBtn.textContent = "Salin Semua";
+      copyAllBtn.addEventListener("click", () => copyText(msg.text, copyAllBtn));
+
+      topActions.appendChild(copyAllBtn);
+      el.appendChild(topActions);
+    } else {
+      el.classList.add("without-copy");
+    }
 
     const content = document.createElement("div");
     content.className = "msg-content";
@@ -207,6 +213,17 @@ function renderMessageElement(msg) {
 
   messages.appendChild(el);
   return el;
+}
+
+function shouldRenderCopyAll(text) {
+  const value = String(text || "").trim();
+
+  if (!value) return false;
+  if (value.includes("```")) return true;
+  if (value.length > 220) return true;
+  if (/file:\s|index\.html|style\.css|script\.js/i.test(value)) return true;
+
+  return false;
 }
 
 async function sendMessage() {
