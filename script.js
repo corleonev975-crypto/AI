@@ -31,11 +31,11 @@ function closeSide() {
   overlay.classList.remove("show");
 }
 
-plusBtn.addEventListener("click", (e) => {
+plusBtn.onclick = (e) => {
   e.stopPropagation();
   plusPopup.classList.toggle("show");
   statusDropdown.classList.remove("show");
-});
+};
 
 serverStatusBtn.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -68,6 +68,11 @@ async function sendMessage() {
   if (!message) return;
 
   activateChatMode();
+
+  if (chatBox.children.length === 0) {
+    addMessage("Halo! Ada yang bisa saya bantu?", "ai");
+  }
+
   addMessage(message, "user");
   input.value = "";
 
@@ -106,7 +111,16 @@ function addMessage(text, role) {
   const msg = document.createElement("div");
   msg.className = `msg ${role}`;
   msg.innerText = fixText(text);
+  msg.style.opacity = "0";
+  msg.style.transform = "translateY(10px)";
   chatBox.appendChild(msg);
+
+  setTimeout(() => {
+    msg.style.transition = "0.3s";
+    msg.style.opacity = "1";
+    msg.style.transform = "translateY(0)";
+  }, 10);
+
   scrollToBottom();
   return msg;
 }
