@@ -92,7 +92,6 @@ async function sendMessage() {
   if (!message) return;
 
   activateChatMode();
-
   addMessage(message, "user");
   input.value = "";
 
@@ -220,12 +219,17 @@ function handleSelectedFile(event) {
       chatBox.appendChild(wrap);
       scrollToBottom();
 
-      const reply = addMessage("Gambar diterima. Fitur analisis gambar frontend sudah aktif, tapi backend /api/chat kamu saat ini masih mode teks. Kalau mau, backend-nya bisa aku upgrade setelah ini.", "ai");
-      scrollToBottom();
+      addMessage(
+        "Gambar diterima. Upload gambar dan kamera HP sudah aktif di UI. Kalau mau analisis gambar oleh AI, backend /api/chat perlu di-upgrade ke versi vision.",
+        "ai"
+      );
     };
     reader.readAsDataURL(file);
   } else {
-    addMessage("File diterima. Saat ini backend kamu masih mode teks. Upload file sudah aktif di UI.", "ai");
+    addMessage(
+      "File diterima. Upload file sudah aktif di UI.",
+      "ai"
+    );
   }
 
   event.target.value = "";
