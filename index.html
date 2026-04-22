@@ -1,21 +1,127 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Xinn AI</title>
-
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="stars"></div>
 
-  <div id="app">
-    <h1 style="color:white;text-align:center;margin-top:40vh;">
-      Xinn AI Loading...
-    </h1>
-  </div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-orb"></div>
+        <div class="brand-text">
+          <span>Xinn</span>
+          <span>AI</span>
+        </div>
+      </div>
+      <button class="icon-btn close-btn" id="closeSidebar">×</button>
+    </div>
+
+    <button class="new-chat-btn" id="newChatBtn">＋ Chat baru</button>
+
+    <div class="sidebar-search">
+      <input id="historySearch" type="text" placeholder="Cari chat..." />
+    </div>
+
+    <div class="history-list" id="historyList"></div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn">✨ Upgrade</button>
+      <button class="sidebar-footer-btn">👤 Login</button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="app">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="openSidebar">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="top-title">XINN AI</div>
+
+      <div class="status-wrap">
+        <button class="status-btn" id="statusBtn">
+          <span id="statusDot">🟢</span>
+          <span id="statusText">Online</span>
+          <span>▾</span>
+        </button>
+
+        <div class="status-card" id="statusCard">
+          <div class="status-card-row">
+            <div class="status-label green">🟢 Online</div>
+            <div class="status-desc">API aktif dan siap dipakai.</div>
+          </div>
+          <div class="status-card-row">
+            <div class="status-label red">🔴 Offline</div>
+            <div class="status-desc">Server error, route rusak, atau API key bermasalah.</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="hero" id="hero">
+      <div class="hero-orb">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="core">
+          <div class="core-glow"></div>
+          <div class="core-hole"></div>
+        </div>
+      </div>
+
+      <h1><span class="white">Xinn</span> <span class="grad">AI</span></h1>
+      <p>
+        Aku adalah Xinn AI cerdas, pintar,<br />
+        dan bisa membantu anda.
+      </p>
+    </section>
+
+    <section class="chat-area" id="chatArea">
+      <div class="messages" id="messages"></div>
+    </section>
+
+    <section class="composer-wrap">
+      <div class="plus-wrap">
+        <button class="plus-btn" id="plusBtn">＋</button>
+
+        <div class="plus-menu" id="plusMenu">
+          <button class="plus-item" id="fileBtn">📎 Tambah file</button>
+          <button class="plus-item" id="cameraBtn">📷 Ambil foto</button>
+          <button class="plus-item" id="galleryBtn">🖼️ Pilih foto</button>
+        </div>
+      </div>
+
+      <div class="composer">
+        <input id="chatInput" type="text" placeholder="Ketik pesan kamu di sini..." />
+
+        <div class="composer-actions">
+          <button class="circle-btn" type="button">◎</button>
+          <button class="circle-btn" type="button">🎤</button>
+          <button class="send-btn" id="sendBtn" type="button">↑</button>
+        </div>
+      </div>
+
+      <input id="fileInput" type="file" accept="image/*,.pdf,.txt,.doc,.docx" hidden />
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden />
+
+      <p class="footer-note">
+        Xinn AI dapat membuat kesalahan. Periksa info penting.
+        <span class="info-badge">?</span>
+      </p>
+    </section>
+  </main>
 
   <script src="script.js"></script>
-
 </body>
-</html>
+          </html>
