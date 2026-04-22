@@ -21,7 +21,7 @@
 html,
 body {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
@@ -141,6 +141,15 @@ body {
   padding: 0 14px 14px;
 }
 
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.22);
+  border-radius: 999px;
+}
+
 .history-card {
   width: 100%;
   margin-bottom: 8px;
@@ -188,12 +197,13 @@ body {
 
 .app {
   margin-left: 290px;
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 14px 22px calc(14px + env(safe-area-inset-bottom));
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 
 .topbar {
@@ -396,12 +406,24 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px 0 16px;
   display: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .chat-area.active {
   display: block;
+}
+
+.chat-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-area::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.22);
+  border-radius: 999px;
 }
 
 .messages {
@@ -409,15 +431,18 @@ body {
   flex-direction: column;
   gap: 14px;
   padding-right: 4px;
+  padding-bottom: 24px;
 }
 
 .msg {
+  position: relative;
   max-width: 72%;
   padding: 14px 16px;
   border-radius: 18px;
   line-height: 1.6;
   font-size: 15px;
   word-break: break-word;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
@@ -434,6 +459,29 @@ body {
   color: #ddd;
   border: 1px solid rgba(168,85,247,.18);
   box-shadow: 0 0 10px rgba(120,40,255,.08);
+  padding-top: 42px;
+}
+
+.msg.ai.without-copy {
+  padding-top: 14px;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.copy-btn.copied {
+  color: #43e66f;
+  border-color: rgba(67, 230, 111, 0.25);
 }
 
 .msg.ai pre {
@@ -443,6 +491,7 @@ body {
   background: #090b12;
   border: 1px solid rgba(255,255,255,.08);
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .msg.ai code {
@@ -669,7 +718,8 @@ body {
 
   .app {
     margin-left: 0;
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+    height: 100dvh;
+    padding: 14px 14px calc(10px + env(safe-area-inset-bottom));
   }
 
   .hero {
@@ -729,4 +779,12 @@ body {
     width: 44px;
     height: 44px;
   }
-}
+
+  .chat-area {
+    padding-bottom: 18px;
+  }
+
+  .composer-wrap {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+                         }
