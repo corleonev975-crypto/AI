@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v7";
+const STORAGE_KEY = "xinn_ai_pro_chats_v9";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -27,6 +27,7 @@ const cameraInput = document.getElementById("cameraInput");
 const fileBtn = document.getElementById("fileBtn");
 const cameraBtn = document.getElementById("cameraBtn");
 const galleryBtn = document.getElementById("galleryBtn");
+const micBtn = document.getElementById("micBtn");
 
 let chats = loadChats();
 let currentChatId = chats[0]?.id || null;
@@ -88,6 +89,8 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 
+chatInput.addEventListener("input", updateSendButtonState);
+
 chatInput.addEventListener("focus", () => {
   setTimeout(() => {
     scrollBottom();
@@ -102,11 +105,23 @@ window.addEventListener("resize", () => {
 
 newChatBtn.addEventListener("click", () => {
   createNewChat();
-  pendingImage = null;
+  clearPendingImage();
+  updateSendButtonState();
   closeSide();
 });
 
 historySearch.addEventListener("input", renderHistory);
+
+if (micBtn) {
+  micBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"></path>
+      <path d="M19 11a7 7 0 0 1-14 0"></path>
+      <path d="M12 18v3"></path>
+      <path d="M8 21h8"></path>
+    </svg>
+  `;
+}
 
 function loadChats() {
   try {
@@ -157,9 +172,10 @@ function renderHistory() {
     btn.textContent = chat.title;
     btn.onclick = () => {
       currentChatId = chat.id;
-      pendingImage = null;
+      clearPendingImage();
       renderHistory();
       renderCurrentChat();
+      updateSendButtonState();
       closeSide();
     };
     historyList.appendChild(btn);
@@ -173,28 +189,107 @@ function renderCurrentChat() {
   if (!chat || !chat.messages.length) {
     hero.classList.remove("hidden");
     chatArea.classList.remove("active");
-    return;
+  } else {
+    hero.classList.add("hidden");
+    chatArea.classList.add("active");
+
+    chat.messages.forEach((msg) => {
+      const el = document.createElement("div");
+      el.className = `msg ${msg.role}`;
+
+      if (msg.type === "image") {
+        el.classList.add("without-copy");
+        el.style.padding = "10px";
+        el.innerHTML = `
+          <div class="image-preview-wrap">
+            <span class="vision-badge">Vision</span>
+            <img src="${msg.image}" alt="preview">
+          </div>
+        `;
+      } else if (msg.type === "hint") {
+        el.classList.add("image-hint", "without-copy");
+        el.innerHTML = `
+          <div class="image-hint-title">Gambar siap dikirim ✨</div>
+          <div class="image-hint-sub">Tambahkan pertanyaan, atau langsung tekan kirim untuk analisis.</div>
+        `;
+      } else {
+        el.innerText = msg.text;
+      }
+
+      messages.appendChild(el);
+    });
   }
+
+  renderPendingImagePreview();
+  scrollBottom();
+  updateSendButtonState();
+}
+
+function renderPendingImagePreview() {
+  removePendingPreviewElements();
+
+  if (!pendingImage) return;
 
   hero.classList.add("hidden");
   chatArea.classList.add("active");
 
-  chat.messages.forEach((msg) => {
-    const el = document.createElement("div");
-    el.className = `msg ${msg.role}`;
+  const previewWrap = document.createElement("div");
+  previewWrap.className = "msg user without-copy";
+  previewWrap.style.padding = "10px";
+  previewWrap.dataset.pendingPreview = "true";
+  previewWrap.innerHTML = `
+    <div class="image-preview-wrap">
+      <span class="vision-badge">Vision</span>
+      <button type="button" data-remove-image="true" style="
+        position:absolute;
+        top:10px;
+        right:10px;
+        width:28px;
+        height:28px;
+        border:none;
+        border-radius:50%;
+        background:rgba(0,0,0,.58);
+        color:#fff;
+        font-size:16px;
+        cursor:pointer;
+        backdrop-filter:blur(8px);
+      ">×</button>
+      <img src="${pendingImage}" alt="preview">
+    </div>
+  `;
 
-    if (msg.type === "image") {
-      el.classList.add("without-copy");
-      el.style.padding = "10px";
-      el.innerHTML = `<img src="${msg.image}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
-    } else {
-      el.innerText = msg.text;
-    }
+  const hintWrap = document.createElement("div");
+  hintWrap.className = "msg ai image-hint without-copy";
+  hintWrap.dataset.pendingHint = "true";
+  hintWrap.innerHTML = `
+    <div class="image-hint-title">Gambar siap dikirim ✨</div>
+    <div class="image-hint-sub">Tambahkan pertanyaan, tekan kirim untuk analisis, atau hapus gambar dulu.</div>
+  `;
 
-    messages.appendChild(el);
-  });
+  messages.appendChild(previewWrap);
+  messages.appendChild(hintWrap);
 
-  scrollBottom();
+  const removeBtn = previewWrap.querySelector('[data-remove-image="true"]');
+  if (removeBtn) {
+    removeBtn.addEventListener("click", clearPendingImage);
+  }
+}
+
+function removePendingPreviewElements() {
+  messages.querySelectorAll("[data-pending-preview='true'], [data-pending-hint='true']").forEach((el) => el.remove());
+}
+
+function clearPendingImage() {
+  pendingImage = null;
+  removePendingPreviewElements();
+
+  const chat = getCurrentChat();
+  if ((!chat || !chat.messages.length) && !chatInput.value.trim()) {
+    hero.classList.remove("hidden");
+    chatArea.classList.remove("active");
+  }
+
+  updateSendButtonState();
 }
 
 async function sendMessage() {
@@ -229,14 +324,15 @@ async function sendMessage() {
     });
   }
 
+  const imageToSend = pendingImage;
+  pendingImage = null;
+
   saveChats();
   renderHistory();
   renderCurrentChat();
 
   chatInput.value = "";
-
-  const imageToSend = pendingImage;
-  pendingImage = null;
+  updateSendButtonState();
 
   const typing = document.createElement("div");
   typing.className = "msg ai";
@@ -299,6 +395,17 @@ async function sendMessage() {
   }
 }
 
+function updateSendButtonState() {
+  const hasText = chatInput.value.trim().length > 0;
+  const hasImage = !!pendingImage;
+
+  if (hasText || hasImage) {
+    sendBtn.classList.add("active");
+  } else {
+    sendBtn.classList.remove("active");
+  }
+}
+
 function scrollBottom() {
   requestAnimationFrame(() => {
     chatArea.scrollTo({
@@ -352,19 +459,7 @@ async function handleSelectedFile(event) {
     pendingImage = base64;
     hero.classList.add("hidden");
     chatArea.classList.add("active");
-
-    const preview = document.createElement("div");
-    preview.className = "msg user without-copy";
-    preview.style.padding = "10px";
-    preview.innerHTML = `<img src="${base64}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
-    messages.appendChild(preview);
-
-    const hint = document.createElement("div");
-    hint.className = "msg ai without-copy";
-    hint.innerText = "Gambar siap dikirim. Tambahkan pertanyaan, atau langsung tekan kirim.";
-    messages.appendChild(hint);
-
-    scrollBottom();
+    renderCurrentChat();
   } else {
     alert("Saat ini mode Vision hanya untuk gambar.");
   }
@@ -398,3 +493,4 @@ if (!chats.length) {
 renderHistory();
 renderCurrentChat();
 checkAPI();
+updateSendButtonState();
