@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_pro_chats_v6";
+const STORAGE_KEY = "xinn_ai_mobile_chatgpt_input_v1";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -90,7 +90,13 @@ chatInput.addEventListener("keydown", (e) => {
 chatInput.addEventListener("focus", () => {
   setTimeout(() => {
     scrollBottom();
-  }, 300);
+  }, 350);
+});
+
+window.addEventListener("resize", () => {
+  setTimeout(() => {
+    scrollBottom();
+  }, 100);
 });
 
 newChatBtn.addEventListener("click", () => {
@@ -170,60 +176,20 @@ function renderCurrentChat() {
   hero.classList.add("hidden");
   chatArea.classList.add("active");
 
-  chat.messages.forEach(renderMessageElement);
-  enhanceMessageActions();
-  scrollBottom();
-}
+  chat.messages.forEach((msg) => {
+    const el = document.createElement("div");
+    el.className = `msg ${msg.role}`;
 
-function renderMessageElement(msg) {
-  const el = document.createElement("div");
-  el.className = `msg ${msg.role}`;
-
-  if (msg.type === "image") {
-    el.style.padding = "10px";
-    el.classList.add("without-copy");
-    el.innerHTML = `<img class="file-preview" src="${msg.image}" alt="preview">`;
-  } else if (msg.role === "ai") {
-    const shouldShowCopyAll = shouldRenderCopyAll(msg.text);
-
-    if (shouldShowCopyAll) {
-      const topActions = document.createElement("div");
-      topActions.className = "msg-top-actions";
-
-      const copyAllBtn = document.createElement("button");
-      copyAllBtn.className = "copy-btn";
-      copyAllBtn.dataset.label = "Salin Semua";
-      copyAllBtn.textContent = "Salin Semua";
-      copyAllBtn.addEventListener("click", () => copyText(msg.text, copyAllBtn));
-
-      topActions.appendChild(copyAllBtn);
-      el.appendChild(topActions);
+    if (msg.type === "image") {
+      el.innerHTML = `<img src="${msg.image}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
     } else {
-      el.classList.add("without-copy");
+      el.innerText = msg.text;
     }
 
-    const content = document.createElement("div");
-    content.className = "msg-content";
-    content.dataset.raw = msg.text;
-    content.innerHTML = renderMarkdown(msg.text);
-    el.appendChild(content);
-  } else {
-    el.innerText = msg.text;
-  }
+    messages.appendChild(el);
+  });
 
-  messages.appendChild(el);
-  return el;
-}
-
-function shouldRenderCopyAll(text) {
-  const value = String(text || "").trim();
-
-  if (!value) return false;
-  if (value.includes("```")) return true;
-  if (value.length > 220) return true;
-  if (/file:\s|index\.html|style\.css|script\.js/i.test(value)) return true;
-
-  return false;
+  scrollBottom();
 }
 
 async function sendMessage() {
@@ -238,22 +204,26 @@ async function sendMessage() {
     chat.title = makeTitle(text);
   }
 
-  activateChatMode();
+  hero.classList.add("hidden");
+  chatArea.classList.add("active");
 
-  const userMsg = {
+  chat.messages.push({
     role: "user",
     text,
     type: "text"
-  };
+  });
 
-  chat.messages.push(userMsg);
   saveChats();
   renderHistory();
   renderCurrentChat();
 
   chatInput.value = "";
 
-  const typingEl = addTyping();
+  const typing = document.createElement("div");
+  typing.className = "msg ai";
+  typing.innerText = "Mengetik...";
+  messages.appendChild(typing);
+  scrollBottom();
 
   try {
     const history = chat.messages
@@ -276,76 +246,32 @@ async function sendMessage() {
     });
 
     const data = await res.json();
-    typingEl.remove();
+    typing.remove();
 
-    const reply = data.reply || "No response";
-
-    const aiMsg = {
+    chat.messages.push({
       role: "ai",
-      text: reply,
+      text: data.reply || "No response",
       type: "text"
-    };
+    });
 
-    chat.messages.push(aiMsg);
     saveChats();
     renderHistory();
-
-    const el = renderMessageElement(aiMsg);
-    typeMarkdown(el, reply);
-
+    renderCurrentChat();
     setOnline(true);
   } catch {
-    typingEl.remove();
+    typing.remove();
 
-    const aiMsg = {
+    chat.messages.push({
       role: "ai",
       text: "Server offline / API error",
       type: "text"
-    };
+    });
 
-    chat.messages.push(aiMsg);
     saveChats();
     renderHistory();
     renderCurrentChat();
     setOnline(false);
   }
-}
-
-function activateChatMode() {
-  hero.classList.add("hidden");
-  chatArea.classList.add("active");
-}
-
-function addTyping() {
-  const wrap = document.createElement("div");
-  wrap.className = "msg ai without-copy";
-  wrap.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
-  messages.appendChild(wrap);
-  scrollBottom();
-  return wrap;
-}
-
-function typeMarkdown(el, fullText) {
-  const content = el.querySelector(".msg-content");
-  if (!content) return;
-
-  content.innerHTML = "";
-  let i = 0;
-
-  function tick() {
-    if (i < fullText.length) {
-      i += 2;
-      const partial = fullText.slice(0, i);
-      content.innerHTML = renderMarkdown(partial);
-      enhanceMessageActions(el);
-      scrollBottom();
-      setTimeout(tick, 8);
-    } else {
-      enhanceMessageActions(el);
-    }
-  }
-
-  tick();
 }
 
 function scrollBottom() {
@@ -383,13 +309,12 @@ function handleSelectedFile(event) {
   const chat = getCurrentChat();
   if (!chat) return;
 
-  activateChatMode();
+  hero.classList.add("hidden");
+  chatArea.classList.add("active");
 
   if (file.type.startsWith("image/")) {
     const reader = new FileReader();
     reader.onload = () => {
-      if (!chat.messages.length) chat.title = "Gambar baru";
-
       chat.messages.push({
         role: "user",
         type: "image",
@@ -399,7 +324,7 @@ function handleSelectedFile(event) {
       chat.messages.push({
         role: "ai",
         type: "text",
-        text: "Gambar diterima 📷✨ Upload aktif di UI. Kalau mau analisis gambar oleh AI, backend `/api/chat` perlu versi vision."
+        text: "Gambar diterima 📷"
       });
 
       saveChats();
@@ -408,8 +333,6 @@ function handleSelectedFile(event) {
     };
     reader.readAsDataURL(file);
   } else {
-    if (!chat.messages.length) chat.title = file.name;
-
     chat.messages.push({
       role: "user",
       type: "text",
@@ -419,7 +342,7 @@ function handleSelectedFile(event) {
     chat.messages.push({
       role: "ai",
       type: "text",
-      text: "File diterima 📎 Upload file sudah aktif di UI."
+      text: "File diterima 📎"
     });
 
     saveChats();
@@ -428,97 +351,6 @@ function handleSelectedFile(event) {
   }
 
   event.target.value = "";
-}
-
-async function copyText(text, button) {
-  try {
-    await navigator.clipboard.writeText(text);
-    button.textContent = "Tersalin";
-    button.classList.add("copied");
-    setTimeout(() => {
-      button.textContent = button.dataset.label || "Salin";
-      button.classList.remove("copied");
-    }, 1600);
-  } catch {
-    button.textContent = "Gagal";
-    setTimeout(() => {
-      button.textContent = button.dataset.label || "Salin";
-    }, 1200);
-  }
-}
-
-function enhanceMessageActions(scope = document) {
-  const target = scope instanceof Element ? scope : document;
-
-  target.querySelectorAll("pre").forEach((pre) => {
-    if (pre.dataset.enhanced === "true") return;
-    pre.dataset.enhanced = "true";
-
-    const code = pre.querySelector("code");
-    const lang = pre.dataset.lang || detectLanguageFromCode(code?.textContent || "");
-
-    const top = document.createElement("div");
-    top.className = "code-block-top";
-
-    const label = document.createElement("div");
-    label.className = "code-lang";
-    label.textContent = lang || "code";
-
-    const copyCodeBtn = document.createElement("button");
-    copyCodeBtn.className = "copy-btn code-copy-btn";
-    copyCodeBtn.dataset.label = "Salin Kode";
-    copyCodeBtn.textContent = "Salin Kode";
-    copyCodeBtn.addEventListener("click", () => {
-      copyText(code?.textContent || "", copyCodeBtn);
-    });
-
-    top.appendChild(label);
-    top.appendChild(copyCodeBtn);
-
-    pre.prepend(top);
-  });
-}
-
-function detectLanguageFromCode(code) {
-  const value = String(code).trim();
-
-  if (/^<!DOCTYPE html>|<html|<head|<body|<div|<section/i.test(value)) return "html";
-  if (/:root|background:|display:\s*flex|@media|border-radius|color:/i.test(value)) return "css";
-  if (/const |let |function |=>|document\.|addEventListener|fetch\(/i.test(value)) return "javascript";
-  if (/export default|interface |type |: string|: number/i.test(value)) return "typescript";
-  if (/SELECT |INSERT INTO |UPDATE |DELETE FROM |CREATE TABLE/i.test(value)) return "sql";
-  if (/from flask|def |print\(|import os|if __name__/i.test(value)) return "python";
-
-  return "code";
-}
-
-function renderMarkdown(text) {
-  const escaped = escapeHtml(text);
-
-  const withCodeBlocks = escaped.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
-    const safeLang = lang ? lang.toLowerCase() : detectLanguageFromCode(code);
-    return `<pre data-lang="${safeLang}"><code>${code.trim()}</code></pre>`;
-  });
-
-  const withInline = withCodeBlocks.replace(
-    /`([^`]+)`/g,
-    "<code style='display:inline;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:6px;'>$1</code>"
-  );
-
-  return withInline
-    .split(/\n{2,}/)
-    .map((p) => {
-      if (p.startsWith("<pre")) return p;
-      return `<p>${p.replace(/\n/g, "<br>")}</p>`;
-    })
-    .join("");
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function makeTitle(text) {
