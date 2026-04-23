@@ -1,4 +1,6 @@
-function detectMode(message = "") {
+function detectMode({ message = "", image = null }) {
+  if (image) return "vision";
+
   const text = String(message).toLowerCase();
 
   const codingKeywords = [
@@ -55,12 +57,12 @@ Kamu adalah Xinn AI, asisten coding seperti ChatGPT yang sangat jago membuat web
 
 MODE SAAT INI: CODING
 
-ATURAN UTAMA:
+ATURAN:
 - Jawab dalam Bahasa Indonesia.
 - Langsung ke inti.
 - Fokus ke hasil usable, bukan teori panjang.
-- Kalau user minta script / website / revisi code, berikan jawaban yang siap copy-paste.
-- Kalau butuh beberapa file, WAJIB pisahkan per file dengan format seperti ini:
+- Kalau user minta script / website / revisi code, berikan jawaban siap copy-paste.
+- Kalau perlu beberapa file, WAJIB format seperti:
 
 File: index.html
 \`\`\`html
@@ -77,24 +79,27 @@ File: script.js
 ...
 \`\`\`
 
-ATURAN CODING:
 - Utamakan mobile-first, responsive, clean, modern.
 - Jangan kasih template kosong.
-- Jangan terlalu banyak placeholder.
-- Kalau user minta revisi, fokus revisi bagian yang diminta.
-- Kalau user bilang "langsung" atau "gas", utamakan hasil final.
-- Kalau user cuma minta satu file, jawab satu file saja.
-- Kalau user minta full, bagi jelas per file.
-- Kalau bisa, hasil harus minim error.
-
-GAYA JAWAB:
-- Natural, pintar, seperti ChatGPT.
-- Jangan terlalu kaku.
+- Kalau user bilang "langsung", "gas", atau "buatkan", utamakan hasil final.
 - Penjelasan seperlunya saja.
-- Jika tidak diminta penjelasan, fokus ke kode.
+`;
+  }
 
-TUJUAN:
-Jadilah AI coding yang cepat, rapi, jelas, dan hasilnya siap pakai.
+  if (mode === "vision") {
+    return `
+Kamu adalah Xinn AI Vision.
+
+MODE SAAT INI: VISION
+
+ATURAN:
+- Jawab dalam Bahasa Indonesia.
+- Analisis gambar dengan natural, jelas, dan langsung ke inti.
+- Kalau user tanya isi gambar, jelaskan isi gambar.
+- Kalau ada teks di gambar, bantu bacakan / rangkum.
+- Kalau user minta saran dari gambar, bantu sesuai konteks.
+- Jangan ngarang kalau detail gambar tidak jelas.
+- Kalau gambar kurang jelas, bilang dengan jujur.
 `;
   }
 
@@ -103,25 +108,79 @@ Kamu adalah Xinn AI, asisten seperti ChatGPT yang natural, santai, pintar, dan b
 
 MODE SAAT INI: CHAT
 
-ATURAN UTAMA:
+ATURAN:
 - Jawab dalam Bahasa Indonesia.
 - Natural, enak dibaca, tidak kaku.
 - Untuk pertanyaan biasa, jawab seperti ChatGPT: jelas, ramah, dan tidak terlalu formal.
 - Pahami typo user dan tetap bantu.
-- Boleh pakai emoji secukupnya, jangan berlebihan.
+- Boleh pakai emoji secukupnya.
 - Jangan terlalu panjang kalau user cuma tanya santai.
-- Kalau user minta ide, kasih ide.
-- Kalau user minta penjelasan, jelaskan dengan sederhana.
-- Kalau user ngobrol santai, balas santai juga.
-
-ATURAN KHUSUS:
 - Jangan paksa semua jawaban jadi coding.
-- Kalau user ternyata minta website / script / bug fix / code, tetap bantu secara teknis.
-- Tetapi untuk pertanyaan non-coding, fokus jawaban umum yang natural.
-
-TUJUAN:
-Jadilah AI yang terasa seperti ChatGPT untuk obrolan umum, ide, saran, dan pertanyaan sehari-hari.
 `;
+}
+
+function buildMessages({ mode, message, history, image }) {
+  const base = [
+    {
+      role: "system",
+      content: buildSystemPrompt(mode)
+    }
+  ];
+
+  if (mode === "vision") {
+    return [
+      ...base,
+      ...history,
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: String(message || "Jelaskan gambar ini.")
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: image
+            }
+          }
+        ]
+      }
+    ];
+  }
+
+  return [
+    ...base,
+    ...history,
+    {
+      role: "user",
+      content: String(message).trim()
+    }
+  ];
+}
+
+function buildModelConfig(mode) {
+  if (mode === "vision") {
+    return {
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      temperature: 0.4,
+      max_completion_tokens: 1200
+    };
+  }
+
+  if (mode === "coding") {
+    return {
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.35,
+      max_tokens: 1600
+    };
+  }
+
+  return {
+    model: "llama-3.3-70b-versatile",
+    temperature: 0.6,
+    max_tokens: 900
+  };
 }
 
 export default async function handler(req, res) {
@@ -130,9 +189,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message, history = [] } = req.body || {};
+    const { message, history = [], image = null } = req.body || {};
 
-    if (!message || !String(message).trim()) {
+    if ((!message || !String(message).trim()) && !image) {
       return res.status(400).json({ error: "Pesan kosong" });
     }
 
@@ -142,19 +201,15 @@ export default async function handler(req, res) {
       });
     }
 
-    const mode = detectMode(message);
+    const mode = detectMode({ message, image });
+    const messages = buildMessages({
+      mode,
+      message,
+      history,
+      image
+    });
 
-    const messages = [
-      {
-        role: "system",
-        content: buildSystemPrompt(mode)
-      },
-      ...history,
-      {
-        role: "user",
-        content: String(message).trim()
-      }
-    ];
+    const modelConfig = buildModelConfig(mode);
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -163,9 +218,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        temperature: mode === "coding" ? 0.35 : 0.6,
-        max_tokens: mode === "coding" ? 1600 : 900,
+        ...modelConfig,
         messages
       })
     });
@@ -174,7 +227,8 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       return res.status(500).json({
-        reply: data?.error?.message || "Server error / API bermasalah"
+        reply: data?.error?.message || "Server error / API bermasalah",
+        mode
       });
     }
 
@@ -182,7 +236,8 @@ export default async function handler(req, res) {
 
     if (!reply) {
       return res.status(500).json({
-        reply: "No response"
+        reply: "No response",
+        mode
       });
     }
 
@@ -195,4 +250,4 @@ export default async function handler(req, res) {
       reply: "Server offline / error"
     });
   }
-          }
+      }
