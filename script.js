@@ -1,4 +1,4 @@
-const STORAGE_KEY = "xinn_ai_mobile_chatgpt_input_v1";
+const STORAGE_KEY = "xinn_ai_pro_chats_v7";
 
 const sidebar = document.getElementById("sidebar");
 const openSidebar = document.getElementById("openSidebar");
@@ -30,6 +30,7 @@ const galleryBtn = document.getElementById("galleryBtn");
 
 let chats = loadChats();
 let currentChatId = chats[0]?.id || null;
+let pendingImage = null;
 
 openSidebar.addEventListener("click", () => {
   sidebar.classList.add("open");
@@ -101,6 +102,7 @@ window.addEventListener("resize", () => {
 
 newChatBtn.addEventListener("click", () => {
   createNewChat();
+  pendingImage = null;
   closeSide();
 });
 
@@ -155,6 +157,7 @@ function renderHistory() {
     btn.textContent = chat.title;
     btn.onclick = () => {
       currentChatId = chat.id;
+      pendingImage = null;
       renderHistory();
       renderCurrentChat();
       closeSide();
@@ -181,6 +184,8 @@ function renderCurrentChat() {
     el.className = `msg ${msg.role}`;
 
     if (msg.type === "image") {
+      el.classList.add("without-copy");
+      el.style.padding = "10px";
       el.innerHTML = `<img src="${msg.image}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
     } else {
       el.innerText = msg.text;
@@ -194,24 +199,35 @@ function renderCurrentChat() {
 
 async function sendMessage() {
   const text = chatInput.value.trim();
-  if (!text) return;
+
+  if (!text && !pendingImage) return;
 
   if (!currentChatId) createNewChat();
   const chat = getCurrentChat();
   if (!chat) return;
 
   if (!chat.messages.length) {
-    chat.title = makeTitle(text);
+    chat.title = makeTitle(text || "Analisis gambar");
   }
 
   hero.classList.add("hidden");
   chatArea.classList.add("active");
 
-  chat.messages.push({
-    role: "user",
-    text,
-    type: "text"
-  });
+  if (pendingImage) {
+    chat.messages.push({
+      role: "user",
+      type: "image",
+      image: pendingImage
+    });
+  }
+
+  if (text) {
+    chat.messages.push({
+      role: "user",
+      text,
+      type: "text"
+    });
+  }
 
   saveChats();
   renderHistory();
@@ -219,9 +235,12 @@ async function sendMessage() {
 
   chatInput.value = "";
 
+  const imageToSend = pendingImage;
+  pendingImage = null;
+
   const typing = document.createElement("div");
   typing.className = "msg ai";
-  typing.innerText = "Mengetik...";
+  typing.innerText = imageToSend ? "Menganalisis gambar..." : "Mengetik...";
   messages.appendChild(typing);
   scrollBottom();
 
@@ -234,15 +253,21 @@ async function sendMessage() {
         content: m.text
       }));
 
+    const payload = {
+      message: text || "Jelaskan gambar ini.",
+      history
+    };
+
+    if (imageToSend) {
+      payload.image = imageToSend;
+    }
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        message: text,
-        history
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
@@ -301,7 +326,7 @@ async function checkAPI() {
   }
 }
 
-function handleSelectedFile(event) {
+async function handleSelectedFile(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -309,48 +334,51 @@ function handleSelectedFile(event) {
   const chat = getCurrentChat();
   if (!chat) return;
 
-  hero.classList.add("hidden");
-  chatArea.classList.add("active");
-
   if (file.type.startsWith("image/")) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      chat.messages.push({
-        role: "user",
-        type: "image",
-        image: reader.result
-      });
+    const base64 = await fileToBase64(file);
 
-      chat.messages.push({
-        role: "ai",
-        type: "text",
-        text: "Gambar diterima 📷"
-      });
+    if (!base64) {
+      alert("Gagal membaca gambar.");
+      event.target.value = "";
+      return;
+    }
 
-      saveChats();
-      renderHistory();
-      renderCurrentChat();
-    };
-    reader.readAsDataURL(file);
+    if (base64.length > 4_000_000) {
+      alert("Ukuran gambar terlalu besar. Coba gambar yang lebih kecil.");
+      event.target.value = "";
+      return;
+    }
+
+    pendingImage = base64;
+    hero.classList.add("hidden");
+    chatArea.classList.add("active");
+
+    const preview = document.createElement("div");
+    preview.className = "msg user without-copy";
+    preview.style.padding = "10px";
+    preview.innerHTML = `<img src="${base64}" alt="preview" style="max-width:220px;border-radius:12px;display:block;">`;
+    messages.appendChild(preview);
+
+    const hint = document.createElement("div");
+    hint.className = "msg ai without-copy";
+    hint.innerText = "Gambar siap dikirim. Tambahkan pertanyaan, atau langsung tekan kirim.";
+    messages.appendChild(hint);
+
+    scrollBottom();
   } else {
-    chat.messages.push({
-      role: "user",
-      type: "text",
-      text: `Mengirim file: ${file.name}`
-    });
-
-    chat.messages.push({
-      role: "ai",
-      type: "text",
-      text: "File diterima 📎"
-    });
-
-    saveChats();
-    renderHistory();
-    renderCurrentChat();
+    alert("Saat ini mode Vision hanya untuk gambar.");
   }
 
   event.target.value = "";
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }
 
 function makeTitle(text) {
